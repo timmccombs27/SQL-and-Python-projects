@@ -1,0 +1,42 @@
+CREATE SCHEMA northwind_pp;
+
+CREATE TABLE northwind_pp.customer
+	(customer_id character(5), company_name varchar(40), contact_name varchar(30), contact_title varchar(30), 
+	 address varchar(60), city varchar(15), region varchar(15), postal_code varchar(10), country varchar(15), 
+	 phone varchar(24), fax varchar(24), PRIMARY KEY (customer_id));
+	 
+CREATE TABLE northwind_pp.categories
+ 	(category_id smallint, category_name varchar(15), description text, picture bytea,
+	 PRIMARY KEY (category_id));
+	 
+CREATE TABLE northwind_pp.product
+ 	(product_id smallint, product_name varchar(40), category_id smallint, quantity_per_unit varchar(20),
+	 unit_price real, units_in_stock smallint, units_on_order smallint, reorder_level smallint,
+	 discontinued integer, PRIMARY KEY (product_id), FOREIGN KEY (category_id) REFERENCES northwind_pp.categories(category_id));
+	 
+CREATE TABLE northwind_pp.date
+	(date date, date_description varchar(40), day_of_week smallint, day_of_week_name varchar (12), month_name varchar(16), calendar_quarter smallint,
+	 calendar_year smallint, PRIMARY KEY (date));
+
+CREATE VIEW northwind_pp.order_date
+	(order_date, order_date_description, order_day_of_week, order_day_of_week_name, order_month_name, order_calendar_quarter, 
+	 order_calendar_year) as select date, date_description, day_of_week, day_of_week_name, month_name, calendar_quarter, calendar_year from northwind_pp.date;
+	 
+CREATE VIEW northwind_pp.required_date
+	(required_date, required_date_description, required_day_off_week, required_day_of_week_name, required_month_name, required_calendar_quarter, 
+	 required_calendar_year) as select date, date_description, day_of_week, day_of_week_name, month_name, calendar_quarter, 
+	 calendar_year from northwind_pp.date;
+	 
+CREATE VIEW northwind_pp.shipped_date
+	(shipped_date, shipped_date_description, shipped_day_off_week, shipped_day_of_week_name, shipped_month_name, shipped_calendar_quarter, 
+	 shipped_calendar_year) as select date, date_description, day_of_week, day_of_week_name, month_name, calendar_quarter, 
+	 calendar_year from northwind_pp.date;
+	 
+CREATE TABLE northwind_pp.order
+	(order_date date, required_date date, shipped_date date, customer_id character(5), order_id smallint, product_id smallint,
+	 unit_price real, quantity smallint, discount real);
+	 
+ALTER TABLE northwind_pp.order
+	ADD FOREIGN KEY (order_date) REFERENCES northwind_pp.date(date), ADD FOREIGN KEY (required_date) REFERENCES northwind_pp.date(date),
+	ADD FOREIGN KEY (shipped_date) REFERENCES northwind_pp.date(date), ADD FOREIGN KEY (customer_id) REFERENCES northwind_pp.customer(customer_id),
+	ADD FOREIGN KEY (product_id) REFERENCES northwind_pp.product(product_id);
