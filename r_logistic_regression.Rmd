@@ -1,0 +1,111 @@
+---
+title: "Module 4 CT Option1"
+author: "Timothy McCombs"
+date: "8/15/2021"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+---
+
+Data classification techniques are common in data analytics and are used to place data into category groups or bins for evaluation.  This assignment will focus on completing a logistic regression model.  The data set used provides financial information for a list of un-named banks.  The financial condition (strength) of each bank is classified into a strong or weak category.  The data from the data set will be explored, then a logistic regression model will be constructed and evaluated.
+
+**Figure 1**  
+*Load Data Set*    
+
+```{r Figure 1}
+library(tidyverse)
+library(ggplot2)
+library(gains)
+library(carat)
+library(ISLR)
+library(InformationValue)  
+mod4banks.df <- read.csv("MIS510banks.csv", header = TRUE)  
+head(mod4banks.df)
+```
+
+**Figure 2**  
+*Remove Extra Attributes*   
+
+```{r Figure 2}
+mod4banks.df <- mod4banks.df[ , -c(1,5)]
+head(mod4banks.df)
+```
+
+**Figure 3**  
+*`View` and `dim` Functions*  
+
+```{r Figure 3}
+View(mod4banks.df)
+dim(mod4banks.df)
+```
+
+**Figure 4**  
+*Mean and Median of Attributes*  
+
+```{r Figure 4}
+data.frame(mean = sapply(mod4banks.df[,-1], mean),
+           median = sapply(mod4banks.df[,-1], median))
+```
+
+**Figure 5**  
+*Logistic Regression*  
+
+```{r Figure 5}
+logit.mod4banks <- glm(Financial.Condition ~ ., family ="binomial", data = mod4banks.df)
+options(scipen=999)
+summary(logit.mod4banks)
+```
+
+**Figure 6**  
+*Predicted Probabilities*  
+
+```{r Figure 6}
+logit.mod4banks.pred <- predict(logit.mod4banks, mod4banks.df, type = "response")
+summary(logit.mod4banks.pred)
+data.frame(actual = mod4banks.df$Financial.Condition[1:5],
+     predicted = logit.mod4banks.pred[1:5])
+```
+
+**Figure 7**  
+*Confusion Matrix*  
+
+```{r Figure 7}
+(optimal <- optimalCutoff(mod4banks.df$Financial.Condition, logit.mod4banks.pred))
+confusionMatrix(mod4banks.df$Financial.Condition, logit.mod4banks.pred, threshold = optimal)
+```
+
+**Figure 8**  
+*Lift Chart*
+
+```{r Figure 8}
+(mod4gain <- gains(mod4banks.df$Financial.Condition, logit.mod4banks.pred, groups = length(mod4banks.df)))
+plot(c(0,mod4gain$cume.pct.of.total*sum(mod4banks.df$Financial.Condition))~c(0,mod4gain$cume.obs),
+     xlab = "# cases", ylab = "Cumulative", main = "Financial Condition Lift Chart", type = "l")
+lines(c(0, sum(mod4banks.df$Financial.Condition))~c(0, dim(mod4banks.df)[1]), lty = 2)
+```
+
+---
+
+## Description and Lessons Learned
+
+The MIS510Banks *csv* file was loaded to R Studio using the `read.csv` function and set as a data frame.  Figure 1 displays this code as well as the libraries that were loaded for the assignment. Then since the data set is quite small, the `head()` function was used to view all attributes. The Obs attribute is just the numbered list of observations.  It should be removed.  Also, per the class instructor's recommendations, one of the three remaining predictors needs to be removed to avoid warnings during the logistic regression model build.  The predictor *TotLns.Lses.Assets* (column five) will be removed.  
+
+Figure 2 displays the code for removing columns one and five.  The `head()` function was then used again to verify the attributes were removed.  The `View()` and `dim()` data exploration functions are displayed in Figure 3.  RMarkdown does not display the results of the `View` function.  This makes sense as many data sets are too large for a standard page in a Word document.  The data set dimensions `dim()` are three columns and 20 rows.  To demonstrate another data exploration example, Figure 4 calculates the mean and median values for the two predictor attributes.  Both attributes have similar statistics which does not provide much insight.
+
+The logistic regression model is provided in Figure 5.  As stated, the outcome or predicted attribute is *Financial.Condition* which represents the financial strength of the institution categorized into two bins, weak financial strength represented as a zero, and strong financial strength represented as one.  The *family* option in the `glm()` function must be binomial since the outcome attribute is only one of two outcomes.  The results of the regression can be seen using `summary()`.  Using these results, a predictive equation can be written and used to predict future observation outcomes.  The logistic equation for this data set is **Logit(Financial Condition = Strong) = (-7.3768) - 0.3873(TotCap.Assets) + 109.8631(TotExp.Assets)**.
+
+Evaluation can now be performed on the logistic regression model.  Predicted probabilities for the first 5 rows of observations will be calculated and then compared to the actual values.  Figure 6 displays code for creating the predicted values model (function `predict`) and the creation of a new data frame that compares the predicted model values with the actual categorized results from the logistic regression.  The `summary` function displays some extra information from the predicted model results.  The comparison shows a possible discrepancy at the third observation with the actual value at one and the predicted value at 0.46.  However, this result will be justified with the calculation of an optimal cutoff.  The optimal cutoff is the optimized separation between classes and is used within a confusion matrix which displays how well the model predicted the correct classifications (See Figure 7).  The optimal cutoff result is 0.2399.  This would mean a predicted result of 0.46 would be classed as one or strong.   Reading the matrix left to right, up to down, there were nine true weak financial condition results, no false weak results, one false strong result, and 10 true strong financial conditions.  In the final evaluation, a lift chart will be created (See Figure 8).  The lift chart curve represents the improvement the model provides in classifying results (the curved solid line) as opposed to random choice (the straight dashed line).  If multiple models are made, a comparison of their lift charts provides a graphical method for determining which model performed the best (the chart that has the most area between the curve and the random guess line).
+
+In this assignment, a financial data set was explored and a logistic regression model was created.  Methods to evaluate the model performance were also explored including prediction probabilities, confusion matrix, and lift chart.  A prediction equation was created from the model similar to how a prediction equation can be created from a linear regression.  There are still many questions concerning R code and how it relates to the theories and math discussed in the textbook (Shmueli et al., 2018).  The author of this paper's goal is to understand each keystroke within the R code examples.  The textbook does not always provide a thorough explanation between concepts and code.
+
+---
+
+## References
+
+RStudio Team. (2021). *RStudio: Integrated development environment for R. RStudio*, PBC, Boston, MA. http://www.rstudio.com/.
+
+Shmueli, G., Bruce, P.C., Yahav, I., Patel, N.R., and Lichtendahl, K.C. (2018). *Data mining for business analytics: Concepts, techniques, and application sin R.* Wiley Publishing. ISBN: 9781118879337.
