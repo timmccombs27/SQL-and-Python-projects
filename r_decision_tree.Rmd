@@ -1,0 +1,98 @@
+---
+title: "Module 3 CT Option 2"
+author: "Timothy McCombs"
+date: "8/8/2021"
+output: word_document
+editor_options: 
+  chunk_output_type: inline
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+***
+This week's reading material introduces the R code package *RMarkdown* which allows for publishing from R Studio to several file formats.  Also, predictive regression model examples such as linear regression and regression decision trees are covered.  The regression decision tree will be selected for this assignment.  The description of steps taken and lessons learned follow the screenshot figures.
+
+**Figure 1**  
+*Load as Data Frame and Head Function*
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(rpart)
+library(rpart.plot)
+mod3cars.df <- read.csv("ToyotaCorolla2.csv", header = TRUE)
+head(mod3cars.df)
+```
+
+**Figure 2**  
+*Data Frame Dimensions*  
+
+```{r}
+dim(mod3cars.df)
+```
+
+**Figure 3**  
+*Attibute List with Column Numbers*  
+
+```{r}
+t(t(names(mod3cars.df)))
+```
+
+**Figure 4**  
+*Histogram and Boxplot of Prices*  
+
+```{r fig1, fig.asp=0.618, fig.width=6}
+ggplot(mod3cars.df) + geom_histogram(mapping = aes(x = Price), bins = 30,
+                                     col = "black", fill = "dark green") +
+  xlab("Price in Dollars") +
+  ggtitle("Toyota Model Prices")
+boxplot(mod3cars.df$Price, main = "Toyota Model Prices",
+        horizontal = TRUE, col = "dark green", xlab = "Price in Dollars")
+```
+
+**Figure 5**  
+*Dimension Reduction*  
+
+```{r}
+mod3cars2.df <- select(mod3cars.df, Price, Age_08_04, KM, Fuel_Type, HP, 
+                       Automatic, Doors, Quarterly_Tax, Mfr_Guarantee, 
+                       Guarantee_Period, Airco, Automatic_airco, CD_Player, 
+                       Powered_Windows, Sport_Model, Tow_Bar)
+head(mod3cars2.df)
+```
+
+**Figure 6**  
+*Regression Decision Tree*  
+
+```{r}
+set.seed(1)
+train.index <- sample(c(1:dim(mod3cars2.df)[1]), dim(mod3cars2.df)[1]*0.6)
+mod3train.df <- mod3cars2.df[train.index, ]
+mod3valid.df <- mod3cars2.df[-train.index, ]
+mod3cars.dt <- rpart(Price ~., data = mod3train.df, method = "anova", 
+                     cp = 0.001, minbucket = 1, maxdepth = 30)
+```
+
+**Figure 7**  
+*Decision Tree Plot*
+
+```{r fig2, fig.height=5, fig.width=6}
+rpart.plot(mod3cars.dt, type = 0, extra = 1, varlen = 0, cex = 0.5)
+```
+
+---
+
+## Description of Steps Taken and Lessons Learned
+
+To begin, multiple data exploration functions will be performed.  After loading the appropriate libraries, the *csv* file is read and saved to the *mod3cars* data frame and the `head(mod3cars)` function is run to display as a sample of the data frame (See Figure 1).  The data frame attributes are displayed in a flat-file format with the first 6 rows of data.  Next, Figure 2 displays the dimensions of the data frame using the function `dim(mod3cars.df)` which is 1,436 rows and 39 columns. In Figure 3, the code `t(t(names(mod3cars)))` will display the data frame attributes in a list along with their respective column numbers.  Visualizations to examine the Price attribute are added (See Figure 4).  The histogram and box plot for Price shows data is normally distributed and has a right or positive skew.  Since the assignment already provides instructions to limit the attributes for the decision tree, dimension reduction will be done next (See Figure 5).  The `select` function will be used to create a new data frame *mod3cars2* with the reduced attributes.  The `head(mod3cars2)` function is added as a means to verify the list of attributes in the new data frame is correct.
+
+After data exploration, a regression tree will be created using the parameters from the assignment and then the created tree will be plotted.  Figure 6 displays the code for creating a training data frame which is 60% of the mod3cars2 data frame.  The regression tree is created using the 'rpart' function.  The method of *anova* specifies the decision tree is a regression and not a classification tree.  Two functions, `prp` or `rpart.plot` may be used to plot the tree.  `Rpart.plot` was chosen as the display as it is easier to read for this example (See Figure 7).
+
+A significant lesson learned in this exercise was the actual code for the decision tree.  Both classification and regression trees use the same function, however, it is the *method* parameter that determines the type of tree created.  Multiple questions arise with the use of *RMarkdown*.  Mainly, the R package has several formatting limitations which conflict with APA requirements.  Future consideration for the assignment instructions may be to clarify which directive is a higher priority.  The two plot functions for displaying decision trees are frustrating.  It is hard to tweak either plot function to assure legibility in larger trees and to avoid overlap in node labels.  Centering plot images are also a challenge.  Using `fig.align = "center"` in the code chunk does not appear to be supported.
+
+---
+
+## References
+
+RStudio Team. (2021). RStudio: Integrated development environment for R. RStudio, PBC, Boston, MA. http://www.rstudio.com/.
