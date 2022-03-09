@@ -1,0 +1,152 @@
+---
+title: "MIS 510 Portfolio Project Option 2"
+author: "Timothy McCombs"
+date: "9/12/2021"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+------------------------------------------------------------------------
+
+The catalog company Exeter, Inc. sells products to customers via its distribution of several catalogs that have a variety of subject categories. The company's business goal is to optimize its profits by controlling printing and distribution costs while maximizing sales via improved marketing strategies. A potential opportunity to increase sales lies in cross-selling or enticing a customer to buy additional products given the combination of products already in their shopping cart. The company has provided a data set of customers with purchasing histories in a given set of catalog categories. The categories consist of Clothing, Housewares, Health, Automotive, Personal Electronics, Computers, Garden, Novelty Gifts, and Jewelry. The goal of the project is to identify strong associations between products already purchased by customers so that Exeter, Inc. may market these cross-selling opportunities.
+
+## Program Code and Plots
+
+**Figure 1**\
+*Load Libraries and Import Data Set*
+
+```{r Figure 1}
+# Load appropriate libraries for the project.
+library(Matrix)
+library(arules)
+library(arulesViz)
+library(tidyverse)
+
+# Create the pp.ccs data frame by reading the comma separated values file.
+pp.ccs <- read.csv("CatalogCrossSell.csv", header = TRUE)
+```
+
+**Figure 2**\
+*Initial Exploration of Data*
+
+```{r Figure 2}
+# Display the first 6 rows of records and all columns in the data frame.
+head(pp.ccs)
+
+# Display the structure of the data frame which provides the number
+# of variables and rows as well as the variable types.
+str(pp.ccs)
+```
+
+**Figure 3**\
+*Dimension Reduction and Conversion to Transaction Data*
+
+```{r Figure 3}
+# Convert data frame to a matrix format, and remove columns one and four.
+pp.ccs <- as.matrix(pp.ccs[,-c(1,4)])
+
+# Create a new pp.ccs.trans matrix and convert variable types to transaction data.
+pp.ccs.trans <- as(pp.ccs,"transactions")
+
+# List column (variable) names to verify integrity.
+colnames(pp.ccs.trans)
+
+# Display summary information of new matrix to verify itemMatrix in sparse format.
+# Also displays most frequent items used.
+summary(pp.ccs.trans)
+
+# Run structure command for pp.ccs.trans to verify data is in appropriate formats.
+str(pp.ccs.trans)
+```
+
+**Figure 4**\
+*Apriori Model and Association Rules*
+
+```{r Figure 4}
+# Run association rules model Apriori
+pprules <- apriori(pp.ccs.trans,parameter = list(supp = 0.05, conf = 0.5,target = "rules"))
+
+# Limit significant digits to three with options function.
+options(digits = 3)
+
+# List the top five rules identified from the model by descending lift.
+inspect(head(sort(pprules, by = "lift"), n = 5))
+```
+
+**Figure 5**\
+*Scatter Plot of Created Rules*
+
+```{r Figure 5, fig.height=4, fig.width=6}
+# Scatter plot of created rules.
+plot(pprules, jitter = 0, main = "Scatterplot of Created Rules")
+```
+
+**Figure 6**\
+*Graph of Created Rules*
+
+```{r Figure 6,fig.height=6, fig.width=6}
+# Graph of created rules.
+plot(pprules, method = "graph")
+```
+
+**Figure 7**\
+*Parallel Coordinates of Created Rules*
+
+```{r Figure 7, fig.height=4, fig.width=6}
+# Parallel coordinate plot of created rules.
+plot(pprules, method = "paracoord", control = list(reorder = TRUE))
+```
+
+**Figure 8**\
+*Heat Matrix of Created Rules*
+
+```{r Figure 8, fig.height=4, fig.width=6}
+# Heat matrix of created rules.
+plot(pprules, method = "matrix")
+```
+
+**Figure 9**\
+*Grouped Matrix of Top Ten Antecedents by Lift*
+
+```{r Figure 9, fig.height=7, fig.width=6}
+# Grouped matrix plot.
+# Use k parameter to limit number of antecedent groups.
+plot(pprules, method = "grouped", k = 10)
+```
+
+------------------------------------------------------------------------
+
+## Description, Visualizations, and Interpretation
+
+To start, the appropriate libraries are loaded to R Studio for the project (Figure 1). *Arules* and *arulesViz* are the key libraries providing association rule processes and visualizations. The comma-separated values data set provided by the company is read and made into a data frame. Some initial data exploration (Figure 2) using the `head` and `str` functions reveal a data set of ten variables (attributes) and 4,998 rows or observations. The initial column or variable is the customer number that will not be needed for market basket analysis, therefore it will need to be removed. The rest of the columns are integers of one or zero. The categories are further described as the following: *Customer.Number, Clothing.Division, Housewares.Division, Health.Products.Division, Automotive.Division, Personal.Electronics.Division, Computers.Division, Garden.Division, Novelty.Gift.Division*, and *Jewelry.Division*. These columns can be changed to transaction data. To verify there is varied results in each column, the original *.csv* file was explored in Microsoft Excel using column filtering. The *Health.Products.Division* category column has a value of one for all rows. This variable (column four) will not provide any insight and will also be removed before analysis.
+
+The data frame is converted to a matrix format and columns one and four (*Customer.Number* and *Health.Products.Division*) are removed (Figure 3). Also, the data are transformed into transaction data and named *pp.ccs.trans*. As a check, `Colnames` and `summary` are used to verify the correct columns and rows remain and `str` verifies data is now transaction data. The transaction data is now ready for the model.
+
+The commonly used Apriori algorithm will be selected to identify associations (Figure 4). A minimum confidence value of 0.5 (50%) is used to ensure the associations identified have significant weight. After testing a range of minimum support values, a 0.05 setting is used to create a manageable list of 54 rules. Model results are rounded to three decimal places. The results are sorted by decreasing lift with the top five results listed at the bottom of Figure 4.  These rules can be interpreted as follows:
+
+**1. If items are purchased in the *Personal.Electronics.Division, Garden.Division*, and *Jewelry.Division*, then with confidence 60.6% *Novelty.Gift.Division* items will also be purchased. This rule has a lift ratio of 2.66.**\
+**2. If items are purchased in the *Housewares.Division, Personal.Electronics.Division*, and *Garden.Division*, then with confidence 58.5% *Novelty.Gift.Division* items will also be purchased. This rule has a lift ratio of 2.57.**\
+**3. If items are purchased in the *Automotive.Division* and *Personal.Electronics.Division*, then with confidence 69.9% *Garden.Division* items will also be purchased. This rule has a lift ratio of 2.57.**\
+**4. If items are purchased in the *Personal.Electronics.Division* and *Garden.Division*, then with confidence 53.4% *Novelty.Gift.Division* items will also be purchased. This rule has a lift ratio of 2.35.**\
+**5. If items are purchased in the *Automotive.Division*, then with confidence 63.4% *Garden.Division* items will also be purchased. This rule has a lift ratio of 2.33.**
+
+### Visualizations
+
+Figure 5 is a scatter plot graph plotting the created rules in relation to support and confidence with lift ratio intensity. It is noted that rules with support greater than 0.10 do not have a significant lift. This would indicate there is no single association that will yield a significant marketing windfall. It will be the combination of smaller support, higher lift marketing associations that will add up. A mapped graph of the created association rules in Figure 6 is a little coagulated, however, it can be seen that the *Garden.Division, Personal.Electronics.Division, Jewelry.Division*, and *Housewares.Division* categories are involved with the majority of created rules. This is supported in the parallel coordinates plot displayed in Figure 7, with many association lines converging on these divisions. Figure 8 is a heat matrix of the created rules with left-hand side antecedents (LHS) on the x-axis and right hand-side consequents (RHS) on the y-axis. The heat map demonstrates cross-marketing novelty gifts and gardening items (darker red shades for RHS 4 and 5) with the other divisions will provide the highest lift ratios.  Lastly, Figure 9 lists the top ten grouped antecedents by lift (LHS groups) paired with respective consequents listed to the right (RHS) on the y-axis. The RHS rules are sorted by descending lift values so that the graph displays the strongest rules by lift in the upper left.  Again, novelty gifts and garden division items show the strong lift associations.
+
+### Interpretation Summary
+
+The analysis model suggests many cross-purchasing associations among the *Garden.Division, Personal.Electronics.Division, Housewares.Division*, and *Jewelry.Division* catalogs. These may be good targets to focus much of the marketing budget. As for what items to cross-market, novelty gift items and gardening items indicate the best lift or probability of subsequent purchasing over mere random occurrence. Conversely, the *Computer.Division* appears to be a silo-ed, niche market that does not warrant cross-marketing investment.
+
+------------------------------------------------------------------------
+
+## References:
+
+Colorado State University Global (CSUG). (2021). *Module 6: Relationships in unsupervised learning* [Interactive lecture]. Canvas. <https://portal.csuglobal.edu>.
+
+RStudio Team. (2021). *RStudio: Integrated development environment for R. RStudio*. PBC, Boston, MA. <http://www.rstudio.com/>.
+
+Shmueli, G., Bruce, P.C., Yahav, I., Patel, N.R., and Lichtendahl, K.C. (2018). *Data mining for business analytics: Concepts, techniques, and application sin R.* Wiley Publishing. ISBN: 9781118879337.
