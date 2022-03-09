@@ -1,2 +1,2 @@
 # portfolio
-Skills portfolio of school projects.
+School projects for Python, SQL, R, and SAS programming.
