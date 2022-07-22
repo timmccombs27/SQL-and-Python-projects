@@ -1,2 +1,1 @@
-# Portfolio
-School projects for Python, SQL, R, and SAS programming.
+School projects using PostgreSQL and Python
